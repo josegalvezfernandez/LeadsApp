@@ -113,7 +113,7 @@ class VentanaDatosEvento(tk.Toplevel):  # Toplevel es una ventana aparece por en
 
         str_fecha = str(self.cl_fecha.get_date()) + " " + self.sb_hora.get() + ":" + self.sb_minuto.get() + ":0"
         fecha = datetime.strptime(str_fecha,"%Y-%m-%d %H:%M:%S")# Parseo un str a datetime.date para que puede comparar (i.e >=)
-        evento = {"Email":self.lead["Email"], "Tipo":self.cb_tipo.get(), "Lugar":self.sv_lugar.get(), "Estado":self.cb_estado.get(),"Comentarios": self.tx_comentarios.get("1.0", tk.END).strip(),"Fecha":str_fecha}
+        evento = {"Email":self.lead["Email"], "Tipo":self.cb_tipo.get(), "Lugar":self.sv_lugar.get(), "Estado":self.cb_estado.get(),"Comentarios": self.tx_comentarios.get("1.0", tk.END).strip(),"Fecha":fecha}
 
         if self.alta:
             self.ventana_eventos.añadir_evento(evento)
