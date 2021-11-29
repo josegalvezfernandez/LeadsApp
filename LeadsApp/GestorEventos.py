@@ -5,6 +5,7 @@ from datetime import date
 def getDefaultEvento(email):
     return {"Email":email,"Tipo":str(EventoTipo.getdefault()),"Fecha":date.today(),"Lugar":"","Estado":str(EventoEstado.getdefault()),"Comentarios":""}
  #"Tipo" lo pasamos a un metodo proprio __str__ porque es lo que maneja la ventana
+
 class EventoTipo(Enum):
 
     LLAMADA = 0

@@ -5,24 +5,32 @@ from datetime import date,datetime
 from DatosEvento import VentanaDatosEvento
 import pandas as pd
 import math
+from TablaEventos import TablaEventos
+from Iconos import get_photo_image_evento
+from LoginLeads import VentanaLoginLeads
+from GestorEventos import EventoEstado
 
 
 class VentanaEventos(tk.Toplevel):
 
-    def __init__(self, leadsapp, lead, eventos_cliente, email='', password=''):
+
+    def __init__(self, leadsapp, lead, eventos_cliente, date=date.today(), email='', password=''):
         super().__init__(master=leadsapp.master)# No lo inicializamos nosotros porque es un
         # atributo del padre. No hacemos self.master = master, lo hace el padre donde
         # aparecerá self.master = master, el padre es tk.Toplevel que en este caso es Leads
         # App
-        # self.geometry("268x157")
+        self.geometry(f"800x500+{leadsapp.master.winfo_width()}+0")
         # self.resizable(0,0)#No podemos cambiar el tamaño de la ventana
         self.eventos_cliente = eventos_cliente
+        self.date = date
         self.title("Visor Eventos")
         self.lead = lead
         self.leadsapp = leadsapp
+        # self.mensajes = mensajes
         self.crear_vista_cliente()
         self.crear_vista_eventos_cliente()
-        # self.pack(fill = tk.BOTH, expand = True)#Esta función existe en Tk frame Organiza los widgets en bloques antes de colocarlos en la ventana
+        self.deiconify()
+        # self.pack(fill = tk.BOTH, padx = conf.PADX, pady = conf.PADY, expand = True)#Esta función existe en Tk frame Organiza los widgets en bloques antes de colocarlos en la ventana
 
     def crear_vista_cliente(self):  # Parte de la ventana con el Nombre, Email, Teléfono
 
@@ -59,66 +67,67 @@ class VentanaEventos(tk.Toplevel):
         self.frame_calendar.pack(fill=tk.X, padx=conf.PADX, pady=conf.PADY)
 
         self.cl_evento = DateEntry(self.frame_calendar)
-        self.cl_evento.set_date(date.today())
+        self.cl_evento.set_date(self.date)
         self.cl_evento.pack(side=tk.TOP, padx=conf.PADX, pady=conf.PADY)
-        self.cl_evento.bind("<<DateEntrySelected>>",self.date_entry_selected) # Cuando seleccionamos
+        self.cl_evento.bind("<<DateEntrySelected>>", self.load_date_events) # Cuando seleccionamos
         # una fecha del widget calendar (i.e. <<DateEntrySelected>> ) llamamos a la función
         # self.date_entry_selected
 
-        self.frame_eventos = tk.Frame(self)
-        tk.Label(self.frame_eventos, text="Eventos:", width=10, anchor="e").pack(side=tk.LEFT, padx=conf.PADX,
-                                                                                 pady=conf.PADY)
-        self.lb_eventos = tk.Listbox(self.frame_eventos, height=5, selectmode=tk.MULTIPLE, width=55)
-        # lb es un list box no hace falta desplegarlo como el combobox
-        self.lb_eventos.pack(side=tk.LEFT, fill=tk.X, padx=0, pady=0)
-        self.sc_eventos = tk.Scrollbar(self.frame_eventos)  # sc scroll
-        self.sc_eventos.pack(side=tk.LEFT, fill=tk.Y,
-                             padx=0)  # fill ocupa el scrollbar igual que el listbox (altura del frame)
-        self.sc_eventos.config(command=self.lb_eventos.yview)
-        self.lb_eventos.config(yscrollcommand=self.sc_eventos.set)
-        self.lb_eventos.bind("<MouseWheel>",
-                             lambda event: VentanaEventos.scrolllistbox(event, self.lb_eventos))
-        self.mostrar_eventos_fecha()
-        self.crear_botones()
+        contenido = self.generar_contenido_eventos()
+        self.frame_eventos = TablaEventos(self, content = contenido)
+        self.frame_eventos.pack(anchor = tk.W, fill=tk.X, padx=conf.PADX + 30, pady=conf.PADY)
 
+        self.crear_botones()
 
     def crear_botones(self):
 
         self.frame_botones = tk.Frame(self)
         self.bt_nuevo_evento = tk.Button(self.frame_botones,text = "Nuevo Evento", command = self.cm_nuevo_evento)
-        self.bt_nuevo_evento.pack(side=tk.LEFT, fill=tk.X)
-        self.bt_cancelar = tk.Button(self.frame_botones, text = "Cancelar", command=self.destroy)
-        self.bt_cancelar.pack(side=tk.RIGHT, fill=tk.X)
+        self.bt_nuevo_evento.pack(side=tk.LEFT, fill=tk.X,  padx=conf.PADX, pady=conf.PADY)
+        self.bt_cancelar = tk.Button(self.frame_botones, text = "Cerrar", command=self.destroy)
+        self.bt_cancelar.pack(side=tk.RIGHT, fill=tk.X,  padx=conf.PADX, pady=conf.PADY)
         self.frame_botones.pack(side=tk.RIGHT, fill=tk.X, padx=conf.PADX, pady=conf.PADY)
 
 
-    def date_entry_selected(self, evento): # La función carga los eventos de la fecha que hemos
-        # seleccionado
+    def load_date_events(self,event = None): # Ponemos None para cuando no le pasemos funcione y
+        # cuando se lo pasmos también
+        ''' La función carga los even1tos de la fecha que hemos
+        seleccionado'''
+        # self.frame_botones.pack_forget()
+        # self.frame_botones.destroy()
+        # self.frame_eventos.update_content(self.generar_contenido_eventos())
+        self.frame_eventos.destroy()
+        self.date = self.cl_evento.get_date()
+        contenido = self.generar_contenido_eventos()
+        self.frame_eventos = TablaEventos(self, content=contenido)
+        self.frame_eventos.pack(anchor = tk.W, fill=tk.X, padx=conf.PADX + 30, pady=conf.PADY)
+        # self.crear_botones()
 
-        self.lb_eventos.delete(0,tk.END)
-        self.mostrar_eventos_fecha()
+    def generar_contenido_eventos(self):
+        ''' Ordena eventos del cliente seleccionados por fecha
+         y en lugar de un str con Tipo, Hora, Estado, Lugar utilizamos una
+         lista para rellenar el LabelGrid con imágenes'''
 
-
-    def mostrar_eventos_fecha(self):
         date_selected = self.cl_evento.get_date()
         self.eventos_dia = self.eventos_cliente.loc[self.eventos_cliente["Fecha"].dt.date == date_selected]
         self.eventos_dia = self.eventos_dia.sort_values(by=["Fecha"])
 
+        if self.eventos_dia.shape[0] == 0:# shape es para ver el tamaño del dataframe.
+            # si ponemos el shape[0] es ver si es una lista sin eventos
+            contenido = [["Sin Eventos"]]
+        else:
+            contenido = [["  Tipo  ","  Hora  ","  Estado  ","  Lugar  "]]
+            for index,evento in self.eventos_dia.iterrows(): # iterrows es para recorrer un dataframe
+                str_hora = str(evento["Fecha"])[-8:-3]
+                fila = [(get_photo_image_evento(evento["Tipo"]),evento["Tipo"]),str_hora,evento["Estado"]]
+                # fila = [(evento["Tipo"]), str_hora, evento["Estado"]]
+                if isinstance(evento["Lugar"], float) and math.isnan(evento["Lugar"]):
+                   evento["Lugar"] = "" #Como no existe lo ponemos a vacío
+                fila.append(evento["Lugar"])
+                contenido.append(fila)
 
+        return contenido
 
-        for index,evento in self.eventos_dia.iterrows(): # iterrows es para recorrer un dataframe
-            str_hora = str(evento["Fecha"])[-8:-3]
-            str_evento = f"{evento['Tipo']} {str_hora} - {evento['Estado']}" # Comillas simples, dentro del
-            # fstring para que no se líe con sus propias comillas dobles
-            if isinstance(evento["Lugar"], float) and math.isnan(evento["Lugar"]):
-                evento["Lugar"] = None
-            if evento['Lugar']:
-                str_evento = str_evento + f" ({evento['Lugar']})"
-
-            self.lb_eventos.insert(tk.END, str_evento)
-
-
-        self.frame_eventos.pack(fill=tk.X, padx=conf.PADX, pady=conf.PADY)
 
     def scrolllistbox(event, lb):
     	global switch
@@ -130,35 +139,39 @@ class VentanaEventos(tk.Toplevel):
         self.nuevo_evento = VentanaDatosEvento(self.leadsapp,self,self.lead,fecha=self.cl_evento.get_date())
 
     def añadir_evento(self,evento):
-        str_evento = f"{evento['Tipo']} - {evento['Estado']}"  # Comillas simples, dentro del
-        # fstring para que no se líe con sus propias comillas dobles
-        self.lb_eventos.insert(tk.END, str_evento)
-        self.eventos_cliente = self.eventos_cliente.append(evento,ignore_index = True)
-        self.eventos_cliente["Fecha"] = pd.to_datetime(self.eventos_cliente["Fecha"])
+        self.leadsapp.añadirEvento(evento)
+        self.leadsapp.mostrarEventos(self.lead,self.cl_evento.get_date())
+        self.destroy()
 
 
-    def actualizar_evento(self):
+
+    def actualizar_evento(self,evento,evento_anterior):
+        self.leadsapp.modificarEvento(evento, evento_anterior)
+        self.leadsapp.crear_ventana_eventos(self.cl_evento.get_date(),self.lead)
+        self.destroy()
+
+    def cm_editar_evento(self, indice):
+        evento = self.eventos_dia.iloc[indice].to_dict()
+        evento["index"] = self.eventos_dia.index[indice]
+        VentanaDatosEvento(self.leadsapp, self, self.lead, evento = evento, fecha = self.cl_evento.get_date())
+
+    def cm_enviar_email(self, indice):
+        lead_df = pd.DataFrame(self.lead).transpose()  # Conversion de Series a Dataframe
+        # lead_df= self.lead.to_frame() # Series a Dataframe que no ha funcionado
+        # print(lead_df)
+        VentanaLoginLeads(self.leadsapp, lead_df,indice = self.eventos_dia.index[indice],ventana_eventos = self)
+
+
+    def cm_realizar_evento(self,indice):
+        evento = self.eventos_dia.iloc[indice].to_dict()
+        evento_anterior = self.eventos_dia.iloc[indice].to_dict()
+        evento["Estado"] = str(EventoEstado.REALIZADO)
+        evento_anterior["index"]=self.eventos_dia.index[indice]
+        self.actualizar_evento(evento,evento_anterior)
+
+    def cm_borrar_evento(self,indice):
         pass
 
-    def cm_evento_anterior(self):
-        self.numero_eventos.set(self.numero_eventos.get() - 1)
-        self.actualizar_evento()
 
-        self.bt_evento_siguiente["state"] = tk.NORMAL  # Constructor de un botón
 
-        if self.numero_eventos.get() > 1:
-            self.bt_evento_anterior["state"] = tk.NORMAL  # Constructor de un botón
-        else:
-            self.bt_evento_anterior["state"] = tk.DISABLED  # Constructor de un botón
-
-    def cm_evento_siguiente(self):
-        self.numero_eventos.set(self.numero_eventos.get() + 1)
-        self.actualizar_evento()
-
-        self.bt_evento_anterior["state"] = tk.NORMAL  # Constructor de un botón
-
-        if self.numero_eventos.get() < self.eventos.shape[0]:
-            self.bt_evento_siguiente["state"] = tk.NORMAL  # Constructor de un botón
-        else:
-            self.bt_evento_siguiente["state"] = tk.DISABLED  # Constructor de un botón
 

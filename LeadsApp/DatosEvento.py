@@ -16,7 +16,7 @@ class VentanaDatosEvento(tk.Toplevel):  # Toplevel es una ventana aparece por en
         self.fecha_inicial = fecha
         self.ventana_eventos = ventana_eventos
 
-        if evento: # MODIFICA (Entra en el if si el evento existe, que es lo mismo que distinto de NONE)
+        if evento != None: # MODIFICA (Entra en el if si el evento existe, que es lo mismo que distinto de NONE)
             self.alta = False
             self.title("Modificar Evento")
             self.evento_anterior = evento.copy() # Ponemos copy porque sino sería una referencia al mismo objeto y no una copia
@@ -63,11 +63,17 @@ class VentanaDatosEvento(tk.Toplevel):  # Toplevel es una ventana aparece por en
         self.cl_fecha.set_date(self.evento["Fecha"].strftime("%x"))
         self.cl_fecha.pack(side=tk.LEFT, fill=tk.X, padx=conf.PADX, pady=conf.PADY)
         tk.Label(self.frame_fecha, text="Hora:", width=10, anchor="e").pack(side=tk.LEFT,padx=2,pady=conf.PADY)
-        self.var_hora = tk.IntVar(value=9)
+        if self.alta:
+            self.var_hora = tk.IntVar(value=9)
+            self.var_minuto = tk.IntVar(value=0)
+        else:
+            self.var_hora = tk.IntVar(value=self.evento["Fecha"].hour)
+            self.var_minuto = tk.IntVar(value=self.evento["Fecha"].minute)
+
         self.sb_hora = tk.Spinbox(self.frame_fecha, from_=0, to=23, increment=1,width = 3,textvariable=self.var_hora)
         self.sb_hora.pack(side=tk.LEFT, padx=1, pady=conf.PADY)
         tk.Label(self.frame_fecha, text=":", width=1, anchor="e").pack(side=tk.LEFT,padx=0,pady=conf.PADY)
-        self.var_minuto = tk.IntVar(value=0)
+
         self.sb_minuto = tk.Spinbox(self.frame_fecha, from_=0, to=55, increment=5, width = 3, textvariable=self.var_minuto, format = "%02.0f")
         self.sb_minuto.pack(side=tk.LEFT, padx=2
                             , pady=conf.PADY)
@@ -117,10 +123,10 @@ class VentanaDatosEvento(tk.Toplevel):  # Toplevel es una ventana aparece por en
 
         if self.alta:
             self.ventana_eventos.añadir_evento(evento)
-            self.leadsapp.añadirEvento(evento)
 
         else:
-            self.leadsapp.modificarEvento(self.evento, self.evento_anterior)
+            self.ventana_eventos.actualizar_evento(evento, self.evento_anterior)
+
 
         self.destroy()
 
