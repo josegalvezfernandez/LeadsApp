@@ -5,11 +5,12 @@
 
 
 import tkinter as tk
-from LeadsApp import LeadsApp
+from VIEW.VentanaPrincipal import VentanaPrincipal
+
 
 def main():
     root = tk.Tk()  # Iniciamos el sistema de ventanas y creamos la ventana principal
-    app = LeadsApp(master=root)
+    app = VentanaPrincipal(master=root)
 
     # ruta = "DatosClientes.xlsx" #De la línea 405 a la 409 me salto ventanas para rellenar y hago pruebas más rápidas
     # datosClientes = leerExcel(ruta)

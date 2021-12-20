@@ -1,8 +1,10 @@
 import tkinter as tk
-import ConfiguracionVentanas as conf
-from GestorLeads import LeadTipologia,LeadMaduracion,LeadCaptacion,LeadTipoContrato,LeadPromocion,LeadSiNoNSNC, getDefaultLead
+
+from LeadsApp.CONTROLLER.leadscontroller import LeadsController
+from LeadsApp.VIEW import ConfiguracionVentanas as conf
+from LeadsApp.MODEL.GestorLeads import LeadTipologia,LeadMaduracion,LeadCaptacion,LeadTipoContrato,LeadPromocion,LeadSiNoNSNC, getDefaultLead
 from tkcalendar import DateEntry
-from datetime import date,datetime
+from datetime import date
 import math
 
 class VentanaDatosLead(tk.Toplevel):  # Toplevel es una ventana aparece por encima
@@ -196,10 +198,10 @@ class VentanaDatosLead(tk.Toplevel):  # Toplevel es una ventana aparece por enci
 
 
         if self.alta:
-            self.leadsapp.añadirLead(lead)
+            LeadsController.get_instance().añadir_lead(lead)
 
         else:
-            self.leadsapp.modificarLead(lead,self.email_anterior)
+            LeadsController.get_instance().modificarLead(lead,self.email_anterior)
 
         self.destroy()
 

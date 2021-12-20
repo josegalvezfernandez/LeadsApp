@@ -4,18 +4,16 @@ Created on Mon Feb 15 12:42:23 2021
 
 @author: Usuario
 """
-from ConfiguracionVentanas import get_filename_from_IOWrapper
+from LeadsApp.VIEW.ConfiguracionVentanas import get_filename_from_IOWrapper
 import tkinter as tk
-from Email import EmailSender
 import tkinter.scrolledtext as scrolledtext
-import ConfiguracionVentanas as conf
+from LeadsApp.VIEW import ConfiguracionVentanas as conf
 from datetime import datetime
+from LeadsApp.CONTROLLER.leadscontroller import LeadsController
 
 
-from Email import EmailReader
 
-
-class VentanaNuevoEmailLeads(tk.Toplevel):#Toplevel es una ventana aparece por encima
+class VentanaEnviarEmail(tk.Toplevel):#Toplevel es una ventana aparece por encima
     ''' Now we can create a new email, specifying:
             - to
             - subject
@@ -91,7 +89,7 @@ class VentanaNuevoEmailLeads(tk.Toplevel):#Toplevel es una ventana aparece por e
         self.sc_adjuntos.pack(side = tk.LEFT,fill = tk.Y,padx=0)#fill ocupa el scrollbar igual que el listbox (altura del frame)
         self.sc_adjuntos.config(command=self.lb_adjuntos.yview)
         self.lb_adjuntos.config(yscrollcommand=self.sc_adjuntos.set)
-        self.lb_adjuntos.bind("<MouseWheel>",lambda event: VentanaNuevoEmailLeads.scrolllistbox(event,self.lb_adjuntos))
+        self.lb_adjuntos.bind("<MouseWheel>", lambda event: VentanaEnviarEmail.scrolllistbox(event, self.lb_adjuntos))
         self.bt_adjuntar = tk.Button(self.frame_adjuntos, text ="Adjuntar", command  = self.cm_adjuntar)
         self.bt_adjuntar.pack(side = tk.LEFT,padx = conf.PADX, pady = conf.PADY)
         self.bt_borrar_adjunto = tk.Button(self.frame_adjuntos, text ="Borrar Adjuntos", command  = self.cm_borrar_adjunto)
@@ -185,8 +183,9 @@ class VentanaNuevoEmailLeads(tk.Toplevel):#Toplevel es una ventana aparece por e
                     self.email_sender.sendEmail2(to.split(","),subject,body,adjuntos=adjuntos)#hemos cambiado el to de str a lista
                     envio_ok += 1
                     data={"Email":to, "Fecha": datetime.now(), "Asunto": subject, "Mensaje": msg_transformado, "Lista adjuntos": adjuntos, "Recibido": False, "Enviado": True}
-                    self.leadsapp.añadirMensaje(data,to, indice_evento = self.indice, ventana_mensajes = self.ventana_mensajes, ventana_eventos = self.ventana_eventos)
-
+                    LeadsController.get_instance().añadirMensaje(data,indice_evento = self.indice)
+                    '''LeadsController.get_instance() el PATRON SINGLETON le pedimos a la 
+                    clase la instancia única'''
                 except Exception as e:
                     envio_error +=1
                     emails_error.append(to)

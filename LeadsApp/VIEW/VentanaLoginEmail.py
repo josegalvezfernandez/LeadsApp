@@ -13,12 +13,12 @@ Created on Mon Feb 15 12:37:29 2021
 """
 #from conf import conf
 import tkinter as tk
-from Email import EmailSender
-from NuevoEmailLeads import VentanaNuevoEmailLeads
-import ConfiguracionVentanas as conf
+from LeadsApp.CONTROLLER.Email import EmailSender
+from LeadsApp.VIEW.VentanaEnviarEmail import VentanaEnviarEmail
+from LeadsApp.VIEW import ConfiguracionVentanas as conf
 
 
-class VentanaLoginLeads(tk.Toplevel):
+class VentanaLoginEmail(tk.Toplevel):
     '''Here the Login window appears and receives data from:
         - Email account.
         - Password.
@@ -56,7 +56,7 @@ class VentanaLoginLeads(tk.Toplevel):
         self.en_passw = tk.Entry(self.frame_passw, textvariable=sv_password, width = 25,show = "*")        #self.en_passw.grid(row = 1, column = 1)
         self.en_passw.pack(side = tk.LEFT, fill = tk.X,padx = conf.PADX, pady = conf.PADY)
         
-        if VentanaLoginLeads.AUTOLOGIN:#Atributo de la clase por eso pongo Clase.atributo. Además se pone en mayñusculas porque es una constante
+        if VentanaLoginEmail.AUTOLOGIN:#Atributo de la clase por eso pongo Clase.atributo. Además se pone en mayñusculas porque es una constante
             sv_email.set("josegalvez@grupoedetica.com")#"","BUSCADORIDEALISTA123")
             sv_password.set("dQd(suGS0,*N")
             #sv_email.set("buscadoridealista@gmail.com")
@@ -80,7 +80,7 @@ class VentanaLoginLeads(tk.Toplevel):
         self.master.password_recordado = self.password
         self.email_sender = EmailSender(self.account,self.password,server = "cpanel.grupoedetica.com")
         #self.email_sender = EmailSender(self.account,self.password)
-        VentanaNuevoEmailLeads(self.leadsapp,self.email_sender,self.df,indice = self.indice, ventana_mensajes = self.ventana_mensajes, ventana_eventos = self.ventana_eventos)
+        VentanaEnviarEmail(self.leadsapp, self.email_sender, self.df, indice = self.indice, ventana_mensajes = self.ventana_mensajes, ventana_eventos = self.ventana_eventos)
         self.withdraw()#Oculta ventana
 
         """try:

@@ -7,24 +7,26 @@ Created on Sat May  1 18:17:07 2021
 
 import tkinter as tk
 import pandas as pd
-import ConfiguracionVentanas as conf
-from LoginLeads import VentanaLoginLeads
+from LeadsApp.VIEW import ConfiguracionVentanas as conf
+from LeadsApp.VIEW.VentanaLoginEmail import VentanaLoginEmail
+from LeadsApp.CONTROLLER.leadscontroller import LeadsController
 
 
 class VentanaMensajes(tk.Toplevel):
     
-    def __init__(self,leadsapp,lead,mensajes,email='',password=''):
+    def __init__(self,leadsapp,lead,email='',password=''):
         super().__init__(master=leadsapp)
         self.geometry(f"800x500+{leadsapp.master.winfo_width()}+0")
         #self.resizable(0,0)#No podemos cambiar el tamaño de la ventana
         self.leadsapp = leadsapp
         self.title("Visor Mensajes")
         self.lead = lead
-        self.mensajes = mensajes
+        self.mensajes = LeadsController.get_instance().get_mensajes_lead(lead["Email"])
         # self.mensajes["Fecha"] = pd.to_datetime(self.mensajes["Fecha"])
         self.crear_vista_cliente()
         self.crear_vista_mensaje()
         self.deiconify()
+        LeadsController.get_instance().suscribir_mensajes(self)
         # self.pack(fill = tk.BOTH, expand = True)#Esta función existe en Tk frame Organiza los widgets en bloques antes de colocarlos en la ventana
     
     def crear_vista_cliente(self): # Parte de la ventana con el Nombre, Email, Teléfono
@@ -119,6 +121,21 @@ class VentanaMensajes(tk.Toplevel):
         self.bt_send.pack(side = tk.RIGHT,padx = conf.PADX, pady = conf.PADY)
         self.frame_enviar.pack(fill=tk.X,padx = conf.PADX, pady = conf.PADY)
 
+    def eliminar_vista_mensaje(self):
+        self.frame_mensajes.destroy()
+        self.frame_asunto.destroy()
+        self.frame_enviar.destroy()
+        self.frame_mensaje.destroy()
+        self.frame_fecha.destroy()
+
+
+    def actualizar(self):
+        self.eliminar_vista_mensaje()
+        self.mensajes = LeadsController.get_instance().get_mensajes_lead(self.lead["Email"])
+        self.crear_vista_mensaje()
+
+
+
     def actualizar_mensaje(self,*args):
         '''Este método puede necesitar diferentes argumentos *args,
         en función desde donde le llamamemos, como es el caso
@@ -186,7 +203,12 @@ class VentanaMensajes(tk.Toplevel):
             self.bt_mensaje_ultimo["state"] = tk.NORMAL
 
     def cm_email(self):
-        lead_df = pd.DataFrame(self.lead).transpose() # Conversion de Series a Dataframe
+        lead_df = pd.DataFrame(self.lead,index=[0]) # Conversion de Series a Dataframe
+        """ValueError: If using all scalar values, you must pass an index 
+        Es un Dataframe pero que viene de convertir un diccionario (self.lead)
+        y por tanto es solo una fila, luego le decimos que escoja la primera
+        fila 
+        """
         # lead_df= self.lead.to_frame() # Series a Dataframe que no ha funcionado
         # print(lead_df)
-        ventanaEmail = VentanaLoginLeads(self.leadsapp,lead_df,ventana_mensajes = self)
+        ventanaEmail = VentanaLoginEmail(self.leadsapp, lead_df)

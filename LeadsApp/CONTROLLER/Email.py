@@ -9,19 +9,15 @@ import smtplib
 import imaplib
 import locale
 import email
-import os
-import datetime
 import html2text
 from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from email.header import Header
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from os.path import basename #Obtener a través de la ruta el nombre del fichero
 from email.header import decode_header
-import webbrowser
 import re
-from GestorLeads import LeadMaduracion, LeadTipologia,LeadTipoContrato,LeadPromocion,LeadCaptacion,getDefaultLead
+from LeadsApp.MODEL.GestorLeads import LeadCaptacion,getDefaultLead
 
 class EmailSender:
     def __init__(self,usuario,contraseña,server='smtp.gmail.com', puerto= 465):

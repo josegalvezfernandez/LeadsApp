@@ -1,10 +1,11 @@
 import tkinter as tk
-import ConfiguracionVentanas as conf
-from GestorLeads import LeadTipologia,LeadMaduracion,LeadCaptacion,LeadTipoContrato,LeadPromocion,LeadSiNoNSNC, getDefaultLead
+
+from LeadsApp.CONTROLLER.leadscontroller import LeadsController
+from LeadsApp.VIEW import ConfiguracionVentanas as conf
 from tkcalendar import DateEntry
 from datetime import date,datetime
 import math
-from GestorEventos import getDefaultEvento,EventoTipo,EventoEstado
+from LeadsApp.MODEL.GestorEventos import getDefaultEvento,EventoTipo,EventoEstado
 
 class VentanaDatosEvento(tk.Toplevel):  # Toplevel es una ventana aparece por encima
     LABEL_WITH = 22
@@ -122,10 +123,10 @@ class VentanaDatosEvento(tk.Toplevel):  # Toplevel es una ventana aparece por en
         evento = {"Email":self.lead["Email"], "Tipo":self.cb_tipo.get(), "Lugar":self.sv_lugar.get(), "Estado":self.cb_estado.get(),"Comentarios": self.tx_comentarios.get("1.0", tk.END).strip(),"Fecha":fecha}
 
         if self.alta:
-            self.ventana_eventos.añadir_evento(evento)
+            LeadsController.get_instance().añadirEvento(evento)
 
         else:
-            self.ventana_eventos.actualizar_evento(evento, self.evento_anterior)
+            LeadsController.get_instance().modificarEvento(evento, self.evento_anterior)
 
 
         self.destroy()

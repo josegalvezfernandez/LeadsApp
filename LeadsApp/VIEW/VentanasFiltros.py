@@ -9,15 +9,12 @@ Created on Mon Feb 15 12:45:50 2021
 
 import tkinter as tk
 from datetime import  date
-
 import numpy as np
 from tkcalendar import DateEntry  # Los paquetes se escriben con minúsculas y las clases
 # con mayúsculas
-
-import ConfiguracionVentanas as conf
-
-
-
+from LeadsApp.CONTROLLER.leadscontroller import LeadsController
+from LeadsApp.MODEL.Filtro import *
+from LeadsApp.VIEW import ConfiguracionVentanas as conf
 
 
 class VentanaAnyadirFiltro(tk.Toplevel):  # Toplevel es una ventana aparece por encima
@@ -28,7 +25,7 @@ class VentanaAnyadirFiltro(tk.Toplevel):  # Toplevel es una ventana aparece por 
         # tk.Tk.__init__(self)
         # self.resizable(0,0)
         self.title("Añadir Filtro")
-        self.df = clientesapp.df
+        self.df = LeadsController.get_instance().get_leads()
         self.clientesapp = clientesapp
         self.frame_creados = []
 
@@ -134,21 +131,22 @@ class VentanaAnyadirFiltro(tk.Toplevel):  # Toplevel es una ventana aparece por 
 
         self.anyadir_titulo_filtro()
 
-        self.frame_maximo = tk.Frame(self)
-        self.frame_maximo.pack(fill=tk.X, padx=conf.PADX, pady=conf.PADY)
-        tk.Label(self.frame_maximo, text="Fecha Maxima:", width=13, anchor="e").pack(side=tk.LEFT, fill=tk.X,
-                                                                                     padx=conf.PADX, pady=conf.PADY)
-        self.cl_maximo = DateEntry(self.frame_maximo)
-        self.cl_maximo.set_date(valor_maximo)  # valor máximo lo teníamos en datetime64 y hemos hecho un método para pasarlo a date
-        self.cl_maximo.pack(side=tk.LEFT, fill=tk.X, padx=conf.PADX, pady=conf.PADY)
-
         self.frame_minimo = tk.Frame(self)
         self.frame_minimo.pack(fill=tk.X, padx=conf.PADX, pady=conf.PADY)
         tk.Label(self.frame_minimo, text="Fecha Minima:", width=13, anchor="e").pack(side=tk.LEFT, padx=conf.PADX,
                                                                                      pady=conf.PADY)
-        self.cl_minimo = DateEntry(self.frame_minimo)
+        self.cl_minimo = DateEntry(self.frame_minimo,date_pattern = "dd-mm-yyyy")
         self.cl_minimo.set_date(valor_minimo)
         self.cl_minimo.pack(side=tk.LEFT, padx=conf.PADX, pady=conf.PADY)
+
+        self.frame_maximo = tk.Frame(self)
+        self.frame_maximo.pack(fill=tk.X, padx=conf.PADX, pady=conf.PADY)
+        tk.Label(self.frame_maximo, text="Fecha Maxima:", width=13, anchor="e").pack(side=tk.LEFT, fill=tk.X,
+                                                                                     padx=conf.PADX, pady=conf.PADY)
+        self.cl_maximo = DateEntry(self.frame_maximo, date_pattern="dd-mm-yyyy")
+        self.cl_maximo.set_date(
+            valor_maximo)  # valor máximo lo teníamos en datetime64 y hemos hecho un método para pasarlo a date
+        self.cl_maximo.pack(side=tk.LEFT, fill=tk.X, padx=conf.PADX, pady=conf.PADY)
 
         self.anyadir_botones_filtro(self.cm_aplicar_filtro_date)
 
@@ -271,64 +269,3 @@ class VentanaAnyadirFiltro(tk.Toplevel):  # Toplevel es una ventana aparece por 
                 variable.set(0)
 
 
-class Filtro:
-    def __init__(self, nombre, campo):
-        self.nombre = nombre
-        self.campo = campo
-
-
-class Filtro_Float(Filtro):
-    def __init__(self, campo, maximo, minimo):
-        super().__init__(f"{campo} de {str(minimo)} a {str(maximo)}", campo)
-        self.maximo = maximo
-        self.minimo = minimo
-
-    def obtener_datos_filtrados(self, df):
-        return df.loc[(df[self.campo] >= self.minimo) & (df[self.campo] <= self.maximo)]
-
-
-class Filtro_Date(Filtro):
-    def __init__(self, campo, maximo, minimo):
-        super().__init__(f"{campo} de {str(minimo)} a {str(maximo)}", campo)
-        # self.maximo = np.datetime64(maximo.utcnow()).astype(datetime)#¿Por qué? Pandas es datetime64 y DateEntry es date
-        # self.minimo = np.datetime64(minimo.utcnow()).astype(datetime)
-        self.maximo = maximo
-        self.minimo = minimo
-
-    def obtener_datos_filtrados(self, df):
-        print(self.minimo, self.maximo)
-        return df.loc[(df[self.campo] >= self.minimo) & (df[self.campo] <= self.maximo)]
-
-
-class Filtro_Valores(Filtro):
-    def __init__(self, campo, lista_de_valores):
-        str_valores = str(lista_de_valores)
-        str_valores = str_valores.replace("[", "")
-        str_valores = str_valores.replace("]", "")
-        super().__init__(f"{campo} en: {str_valores}", campo)
-        self.lista_de_valores = lista_de_valores
-
-    def obtener_datos_filtrados(self, df):  # ¿Cómo se obtiene un filtro en pandas?
-        return df.loc[df[self.campo].isin(self.lista_de_valores)]
-
-
-class Filtro_Valor(Filtro):
-    def __init__(self, campo, valor):
-        super().__init__(f"{campo} contiene: {valor}", campo)  # el parámetro campo lo metemos a mano con el f str
-        self.valor = valor
-
-    def obtener_datos_filtrados(self, df):  # ¿Cómo se obtiene un filtro en pandas?
-        # print(f"campo: {self.campo}")
-        # print(f"valor: {self.valor}")
-        # print(df[self.campo])
-        try:
-            df["auxiliar"] = [",".join(map(str, l)).lower() for l in
-                              df[self.campo]]  # map nos aseguramos que un str cada elemento de la lista
-
-
-        except TypeError:  # Si no es lista
-            print("Estamos en el except")
-            df["auxiliar"] = [str(l).lower() for l in
-                              df[self.campo]]  # Aquí ya sería un str y lo pasamos a lower y en el try es una lista
-        return df.loc[df["auxiliar"].str.contains(self.valor.lower())].drop(["auxiliar"],
-                                                                            axis=1)  # axis 1 quita columnas en lugar de filas

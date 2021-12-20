@@ -1,8 +1,8 @@
 import tkinter as tk
 from functools import partial
-from GestorEventos import EventoTipo,EventoEstado
-from Iconos import get_photo_image_action,ACCION_BORRAR,ACCION_EDITAR,ACCION_ENVIAR_EMAIL,ACCION_MARCAR_REALIZADO
-import ConfiguracionVentanas as conf
+from LeadsApp.MODEL.GestorEventos import EventoTipo,EventoEstado
+from LeadsApp.VIEW.Iconos import get_photo_image_action,ACCION_BORRAR,ACCION_EDITAR,ACCION_ENVIAR_EMAIL,ACCION_MARCAR_REALIZADO
+from LeadsApp.VIEW import ConfiguracionVentanas as conf
 
 
 class TablaEventos(tk.Frame):
@@ -122,7 +122,7 @@ class TablaEventos(tk.Frame):
 
 if __name__ == '__main__':
     root = tk.Tk()
-    img = tk.PhotoImage(file="./Iconos/ICON_Email.png") # La ruta el punto es la carpeta actual. Ojo con el
+    img = tk.PhotoImage(file="../Iconos/ICON_Email.png") # La ruta el punto es la carpeta actual. Ojo con el
     # tipo de archivo porque el jpg no lo acepta
     label_grid = TablaEventos(root, ([3, img], ['my_string', 7]))
     label_grid.pack()
