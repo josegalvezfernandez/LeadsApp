@@ -1,15 +1,16 @@
-import tkinter as tk
 from functools import partial
-from LeadsApp.MODEL.GestorEventos import EventoTipo,EventoEstado
-from LeadsApp.VIEW.Iconos import get_photo_image_action,ACCION_BORRAR,ACCION_EDITAR,ACCION_ENVIAR_EMAIL,ACCION_MARCAR_REALIZADO
-from LeadsApp.VIEW import ConfiguracionVentanas as conf
 
+from LeadsApp.MODEL.GestorEventos import EventoEstado, EventoTipo
+from LeadsApp.VIEW.Iconos import get_photo_image_action, ACCION_EDITAR, ACCION_BORRAR, ACCION_ENVIAR_EMAIL, \
+    ACCION_MARCAR_REALIZADO
+import tkinter as tk
+from LeadsApp.VIEW import ConfiguracionVentanas as conf
 
 class TablaEventos(tk.Frame):
     """
     Creates a grid of labels that have their cells populated by content.
     """
-    def __init__(self, master, content=([0, 0], [0, 0]), *args, **kwargs):
+    def __init__(self, master, content, *args, **kwargs):
         tk.Frame.__init__(self, master, *args, **kwargs)
         self.content = content
         if len(content) == 0:
@@ -118,12 +119,3 @@ class TablaEventos(tk.Frame):
     def cm_borrar_evento(self,indice):
         self.master.cm_borrar_evento(indice)
 
-
-
-if __name__ == '__main__':
-    root = tk.Tk()
-    img = tk.PhotoImage(file="../Iconos/ICON_Email.png") # La ruta el punto es la carpeta actual. Ojo con el
-    # tipo de archivo porque el jpg no lo acepta
-    label_grid = TablaEventos(root, ([3, img], ['my_string', 7]))
-    label_grid.pack()
-    tk.mainloop()

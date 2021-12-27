@@ -20,13 +20,13 @@ from LeadsApp.VIEW import ConfiguracionVentanas as conf
 class VentanaAnyadirFiltro(tk.Toplevel):  # Toplevel es una ventana aparece por encima
     PORCENTAJE_INCREMENTO = 0.05
 
-    def __init__(self, clientesapp):
-        super().__init__(master=clientesapp.master)  # llama al constructor de Toplevel
+    def __init__(self, ventanaPrincipal):
+        super().__init__(master=ventanaPrincipal.master)  # llama al constructor de Toplevel
         # tk.Tk.__init__(self)
         # self.resizable(0,0)
         self.title("Añadir Filtro")
         self.df = LeadsController.get_instance().get_leads()
-        self.clientesapp = clientesapp
+        self.ventanaPrincipal = ventanaPrincipal
         self.frame_creados = []
 
         self.frame_campos = tk.Frame(self)
@@ -228,7 +228,7 @@ class VentanaAnyadirFiltro(tk.Toplevel):  # Toplevel es una ventana aparece por 
         minimo = float(self.sb_minimo.get())
         maximo = float(self.sb_maximo.get())
         filtro = Filtro_Float(self.campo, maximo, minimo)
-        self.clientesapp.aplicar_filtro(filtro)
+        self.ventanaPrincipal.aplicar_filtro(filtro)
         self.destroy()
 
     def cm_aplicar_filtro_date(self):
@@ -236,7 +236,7 @@ class VentanaAnyadirFiltro(tk.Toplevel):  # Toplevel es una ventana aparece por 
         maximo = (self.cl_maximo.get_date())
         print(maximo, minimo)
         filtro = Filtro_Date(self.campo, maximo, minimo)
-        self.clientesapp.aplicar_filtro(filtro)
+        self.ventanaPrincipal.aplicar_filtro(filtro)
         self.destroy()
 
     def cm_aplicar_filtro_valores(self):
@@ -245,12 +245,12 @@ class VentanaAnyadirFiltro(tk.Toplevel):  # Toplevel es una ventana aparece por 
             if variable.get() == 1:
                 valores_seleccionados.append(ck_box.cget("text"))
         filtro = Filtro_Valores(self.campo, valores_seleccionados)
-        self.clientesapp.aplicar_filtro(filtro)
+        self.ventanaPrincipal.aplicar_filtro(filtro)
         self.destroy()
 
     def cm_aplicar_filtro_valor(self):
         filtro = Filtro_Valor(self.campo, self.sv_valor.get())
-        self.clientesapp.aplicar_filtro(filtro)
+        self.ventanaPrincipal.aplicar_filtro(filtro)
         self.destroy()
 
     def cm_seleccionar_todos(self):

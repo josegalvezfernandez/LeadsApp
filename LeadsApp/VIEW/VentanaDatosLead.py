@@ -9,9 +9,8 @@ import math
 
 class VentanaDatosLead(tk.Toplevel):  # Toplevel es una ventana aparece por encima
     LABEL_WITH = 22
-    def __init__(self, leadsapp, lead=None): # La ventana principal es leadsapp y necesitamos pasarlo como argumento para que se comunique con ella
-        super().__init__(master=leadsapp.master)  # llama al constructor de Toplevel
-        self.leadsapp = leadsapp
+    def __init__(self, master, lead=None): # La ventana principal es leadsapp y necesitamos pasarlo como argumento para que se comunique con ella
+        super().__init__(master=master)  # llama al constructor de Toplevel
         self.lead = lead
         if lead:
             self.alta = False

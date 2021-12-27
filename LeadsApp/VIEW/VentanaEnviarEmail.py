@@ -19,17 +19,16 @@ class VentanaEnviarEmail(tk.Toplevel):#Toplevel es una ventana aparece por encim
             - subject
             - message'''
     
-    def __init__(self, leadsapp,email_sender,df, indice = -1,ventana_eventos = None, ventana_mensajes = None):
-        super().__init__(master=leadsapp)#llama al constructor de Toplevel. Además si refactorizamos (utilizando super) y cambiamos el nombre de la clase padre (i.e. tk.Toplevel),
+    def __init__(self, master,email_sender,destinatarios_email, indice = -1,ventana_eventos = None, ventana_mensajes = None):
+        super().__init__(master=master)#llama al constructor de Toplevel. Además si refactorizamos (utilizando super) y cambiamos el nombre de la clase padre (i.e. tk.Toplevel),
         # el código sigue funcionando
        # tk.Tk.__init__(self)
         #self.resizable(0,0)
-        self.leadsapp = leadsapp
         self.title("Nuevo Email")
         self.email_sender = email_sender
         self.ventana_mensajes = ventana_mensajes
         self.ventana_eventos = ventana_eventos
-        self.df = df
+        self.destinatarios_email = destinatarios_email
         self.frame_from = tk.Frame(self)
         self.frame_from.pack(fill=tk.X,padx = conf.PADX, pady = conf.PADY)
         sv_from = tk.StringVar(value = email_sender.usuario) #et es emailto
@@ -62,10 +61,10 @@ class VentanaEnviarEmail(tk.Toplevel):#Toplevel es una ventana aparece por encim
         # print("indices",df.index) # Indices son los títulos de las filas
         # print("columnas",list(df.columns))
         
-        if isinstance(df["Email"],str):
-            self.en_to.insert(tk.INSERT,df["Email"] +"\n")
+        if isinstance(self.destinatarios_email,str):
+            self.en_to.insert(tk.INSERT,self.destinatarios_email +"\n")
         else:
-            for email in df["Email"]:
+            for email in self.destinatarios_email:
                 self.en_to.insert(tk.INSERT,email +"\n")
             
             
@@ -99,7 +98,7 @@ class VentanaEnviarEmail(tk.Toplevel):#Toplevel es una ventana aparece por encim
         self.frame_campos.pack(fill=tk.X,padx = conf.PADX, pady = conf.PADY)        
         tk.Label(self.frame_campos, text="Campo:",width = 10,anchor="e").pack(side = tk.LEFT,padx = conf.PADX, pady = conf.PADY)
         self.cb_campos=tk.ttk.Combobox(self.frame_campos, width = 40,state="readonly")
-        self.cb_campos["values"]=list(self.df.columns.values)
+        self.cb_campos["values"]=list(LeadsController.get_instance().get_leads_columns())
         self.cb_campos.pack(side = tk.LEFT,padx = conf.PADX, pady = conf.PADY)
         self.bt_añadir = tk.Button(self.frame_campos, text ="Añadir", command  = self.cm_add)
         self.bt_añadir.pack(side = tk.LEFT,padx = conf.PADX, pady = conf.PADY)
@@ -166,7 +165,7 @@ class VentanaEnviarEmail(tk.Toplevel):#Toplevel es una ventana aparece por encim
         else: 
             for i in range(len(tos)):
                 to =tos[i]
-                fila = self.df.iloc[i]
+                fila = LeadsController.get_instance().get_lead_by_email(to)
                 msg_transformado = self.transformar(msg, to, fila)
                 if msg_transformado == "":
                     #tk.messagebox.showerror("Mensaje con fallos",f"Compruebe que el mensaje no esté vacio y que todos los campos sean correctos")
@@ -231,7 +230,7 @@ class VentanaEnviarEmail(tk.Toplevel):#Toplevel es una ventana aparece por encim
     def teclear(self,event):#Este método autocompleta si tecleas el tabulador. VER self.tx_mensaje.bind('<Tab>',self.teclear)
          def buscar_campos_autocompletar(campo):
              campos = []
-             for opcion in list(self.df.columns.values):#Lo pasa a lista para poder recorrerla en el bucle. Un dataframe no puedes recorrerlo
+             for opcion in LeadsController.get_instance().get_leads_columns():
                  if opcion.startswith(campo):
                      campos.append(opcion)
              return campos

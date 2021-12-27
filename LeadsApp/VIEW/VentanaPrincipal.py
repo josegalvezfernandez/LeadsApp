@@ -14,13 +14,14 @@ from PIL import ImageTk,Image
 
 from LeadsApp.VIEW.Iconos import get_photo_image_action, ACCION_ENVIAR_EMAIL, ACCION_VER_EVENTOS, ACCION_FILTRAR, ACCION_BORRAR, \
     ACCION_EDITAR, ACCION_AÑADIR
+from LeadsApp.VIEW.VentanaEventosDia import VentanaEventosDia
 from LeadsApp.VIEW.VentanaMensajes import VentanaMensajes
 from LeadsApp.VIEW.VentanaLoginEmail import VentanaLoginEmail
 from LeadsApp.VIEW.VentanasFiltros import VentanaAnyadirFiltro
 from LeadsApp.VIEW import ConfiguracionVentanas as conf
-from LeadsApp.VIEW.DatosLead import VentanaDatosLead
+from LeadsApp.VIEW.VentanaDatosLead import VentanaDatosLead
 from LeadsApp.MODEL.GestorLeads import LeadMaduracion,LeadSiNoNSNC
-from LeadsApp.VIEW.VentanaEventos import VentanaEventos
+from LeadsApp.VIEW.VentanaEventosLead import VentanaEventosLead
 from LeadsApp.CONTROLLER.leadscontroller import LeadsController
 
 
@@ -70,7 +71,7 @@ class VentanaPrincipal(tk.Frame):
             self.bt_email = tk.Button(self.botones_barra,command = self.cm_email,text = "Email",image = self.icono_email)
             self.bt_email.pack(side=tk.LEFT,fill = tk.X)
 
-            self.bt_event = tk.Button(self.botones_barra, command=self.cm_ver_eventos, text="Eventos", image=self.icono_eventos)
+            self.bt_event = tk.Button(self.botones_barra, command=self.cm_ver_eventos_cliente, text="Eventos", image=self.icono_eventos)
             self.bt_event.pack(side=tk.LEFT, fill=tk.X)
 
             self.bt_filtrar = tk.Button(self.botones_barra,command = self.cm_añadir_filtro,text = "Añadir Filtro",state = tk.DISABLED,image = self.icono_filtrar)
@@ -102,8 +103,9 @@ class VentanaPrincipal(tk.Frame):
             self.menu_mensajes.add_command(label = "Ver mensajes", command = self.cm_ver_mensajes, compound ="left")
 
             self.menu_eventos = tk.Menu(self.menu_barra, tearoff = 0)
-            self.menu_eventos.add_command(label = "Ver eventos", command = self.cm_ver_eventos, compound ="left")
-            
+            self.menu_eventos.add_command(label = "Ver eventos Cliente", command = self.cm_ver_eventos_cliente, compound ="left")
+            self.menu_eventos.add_command(label="Ver eventos Dia", command=self.cm_ver_eventos_dia,compound="left")
+
             self.menu_barra.add_cascade(label = "Archivo",menu = self.menu_archivo)
             self.menu_barra.add_cascade(label = "Operaciones",menu = self.menu_operaciones)
             self.menu_barra.add_cascade(label = "Filtrado",menu = self.menu_filtrar)
@@ -161,7 +163,7 @@ class VentanaPrincipal(tk.Frame):
             if selection.shape[0] == 0:
                 tk.messagebox.showerror("Error envío email","Ninguna fila seleccionada para enviar email. Realice una selección")
             else:
-                ventanaEmail = VentanaLoginEmail(self, selection, email = self.email_recordado, password = self.password_recordado)
+                ventanaEmail = VentanaLoginEmail(self.master, selection["Email"].values, email = self.email_recordado, password = self.password_recordado)
                 
         def cm_seleccionar_todos(self):
             self.table.selectAll()
@@ -221,24 +223,27 @@ class VentanaPrincipal(tk.Frame):
             else:
                 for index,row in selection.iterrows(): # row fila  con todos los campos
                     lead = row.to_dict() #selection.iloc[index]
-                    VentanaMensajes(self,lead)
+                    VentanaMensajes(self.master,lead)
 
 
-        def cm_ver_eventos(self):
+        def cm_ver_eventos_cliente(self):
             selection = self.table.getSelectedRows()
             if selection.shape[0] == 0:
                 tk.messagebox.showerror("Error mostrar eventos",
-                                        "Ninguna fila seleccionada para mostrar mensajes. Realice una selección")
+                                        "Ninguna fila seleccionada para mostrar eventos. Realice una selección")
 
             else:
                 for index, row in selection.iterrows():  # row fila con todos los campos
                     lead = row.to_dict()# Equivalente a selection.iloc[index] porque si a selection accedemos con el indice nos da la fila
 
-                    VentanaEventos(self, lead).lift()
+                    VentanaEventosLead(self.master, lead)#Abrimos una ventana por cliente (e.g. lead)
+
+        def cm_ver_eventos_dia(self):
+            VentanaEventosDia(self.master)
 
 
         def cm_añadir_lead(self):
-             VentanaDatosLead(self) #Pasamos un objeto de la clase LeadsApp en el parámetro self dentro de VentanaDatosLead
+             VentanaDatosLead(self.master) #Pasamos un objeto de la clase LeadsApp en el parámetro self dentro de VentanaDatosLead
 
 
 
@@ -250,7 +255,7 @@ class VentanaPrincipal(tk.Frame):
             else:
                 for index, row in selection.iterrows():  # row diccionario con todos los campos
                     lead = row.to_dict() #Las condición es para obtener el lead
-                    VentanaDatosLead(self,lead) #self al estar dentro de la Clase LeadsApp se refiere a un objeto de esa clase
+                    VentanaDatosLead(self.master,lead) #self al estar dentro de la Clase LeadsApp se refiere a un objeto de esa clase
 
 
         def cm_borrar_lead(self):

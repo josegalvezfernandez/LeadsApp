@@ -27,13 +27,12 @@ class VentanaLoginEmail(tk.Toplevel):
     email_recordado = None 
     password_recordado = None 
     
-    def __init__(self,leadsapp,df, indice = -1,ventana_eventos= None, ventana_mensajes = None, email='',password=''):
-        super().__init__(master=leadsapp)
+    def __init__(self,master,destinatarios_email, indice = -1,ventana_eventos= None, ventana_mensajes = None, email='',password=''):
+        super().__init__(master=master)
         #self.geometry("268x157")
         #self.resizable(0,0)#No podemos cambiar el tamaño de la ventana
-        self.leadsapp = leadsapp
         self.title("Login Email")
-        self.df = df
+        self.destinatarios_email = destinatarios_email
         self.ventana_mensajes = ventana_mensajes
         self.ventana_eventos = ventana_eventos
         self.email = email
@@ -80,7 +79,7 @@ class VentanaLoginEmail(tk.Toplevel):
         self.master.password_recordado = self.password
         self.email_sender = EmailSender(self.account,self.password,server = "cpanel.grupoedetica.com")
         #self.email_sender = EmailSender(self.account,self.password)
-        VentanaEnviarEmail(self.leadsapp, self.email_sender, self.df, indice = self.indice, ventana_mensajes = self.ventana_mensajes, ventana_eventos = self.ventana_eventos)
+        VentanaEnviarEmail(self.master, self.email_sender, self.destinatarios_email, indice = self.indice, ventana_mensajes = self.ventana_mensajes, ventana_eventos = self.ventana_eventos)
         self.withdraw()#Oculta ventana
 
         """try:

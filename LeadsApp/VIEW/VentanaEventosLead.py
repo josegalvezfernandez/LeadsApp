@@ -1,4 +1,5 @@
 import tkinter as tk
+from functools import partial
 
 import pandas as pd
 from tkcalendar import DateEntry
@@ -7,33 +8,32 @@ import LeadsApp.VIEW.ConfiguracionVentanas as conf
 from datetime import date,datetime
 
 from LeadsApp.CONTROLLER.leadscontroller import LeadsController
-from LeadsApp.MODEL.GestorEventos import EventoEstado
-from LeadsApp.VIEW.Iconos import get_photo_image_evento
+from LeadsApp.MODEL.GestorEventos import EventoEstado, EventoTipo
+from LeadsApp.VIEW.Iconos import get_photo_image_evento, get_photo_image_action, ACCION_EDITAR, ACCION_BORRAR, \
+    ACCION_ENVIAR_EMAIL, ACCION_MARCAR_REALIZADO
+from LeadsApp.VIEW.TablaEventos import TablaEventos
 from LeadsApp.VIEW.VentanaDatosEvento import VentanaDatosEvento
 import math
-from LeadsApp.VIEW.TablaEventos import TablaEventos
 from LeadsApp.VIEW.VentanaLoginEmail import VentanaLoginEmail
 
 
 
-class VentanaEventos(tk.Toplevel):
+class VentanaEventosLead(tk.Toplevel):
 
 
-    def __init__(self, leadsapp, lead, date=date.today(), email='', password=''):
-        super().__init__(master=leadsapp.master)# No lo inicializamos nosotros porque es un
+    def __init__(self, master, lead, date=date.today(), email='', password=''):
+        #El master es el sistema de ventanas, en otras palabras el conjunto de ventanas
+        super().__init__(master=master)# No lo inicializamos nosotros porque es un
         # atributo del padre. No hacemos self.master = master, lo hace el padre donde
         # aparecerá self.master = master, el padre es tk.Toplevel que en este caso es Leads
         # App
-        self.geometry(f"800x500+{leadsapp.master.winfo_width()}+0")
+        self.geometry(f"800x500+{master.winfo_width()}+0")
+        self.title("Visor Eventos Usuario")
         # self.resizable(0,0)#No podemos cambiar el tamaño de la ventana
-        self.eventos_cliente = LeadsController.get_instance().get_eventos_lead(lead["Email"])
-        self.date = date
-        self.title("Visor Eventos")
         self.lead = lead
-        self.leadsapp = leadsapp
         # self.mensajes = mensajes
         self.crear_vista_cliente()
-        self.crear_vista_eventos_cliente()
+        self.crear_vista_eventos_cliente(date)
         self.deiconify()
         LeadsController.get_instance().suscribir_eventos(self)
         # self.pack(fill = tk.BOTH, padx = conf.PADX, pady = conf.PADY, expand = True)#Esta función existe en Tk frame Organiza los widgets en bloques antes de colocarlos en la ventana
@@ -68,12 +68,12 @@ class VentanaEventos(tk.Toplevel):
                                     state="disabled")  # en es entry
         self.en_telefono.pack(side=tk.LEFT, fill=tk.X, padx=conf.PADX, pady=conf.PADY)
 
-    def crear_vista_eventos_cliente(self):  # Parte de la ventana con Mensajes y Fecha
+    def crear_vista_eventos_cliente(self,date):  # Parte de la ventana con Mensajes y Fecha
         self.frame_calendar = tk.Frame(self)
         self.frame_calendar.pack(fill=tk.X, padx=conf.PADX, pady=conf.PADY)
 
         self.cl_evento = DateEntry(self.frame_calendar, date_pattern = "dd-mm-yyyy")
-        self.cl_evento.set_date(self.date)
+        self.cl_evento.set_date(date)
         self.cl_evento.pack(side=tk.TOP, padx=conf.PADX, pady=conf.PADY)
         self.cl_evento.bind("<<DateEntrySelected>>", self.__load_date_events) # Cuando seleccionamos
         # una fecha del widget calendar (i.e. <<DateEntrySelected>> ) llamamos a la función
@@ -95,10 +95,9 @@ class VentanaEventos(tk.Toplevel):
         self.frame_botones.pack(side=tk.RIGHT, fill=tk.X, padx=conf.PADX, pady=conf.PADY)
 
     def actualizar(self):
-        self.eventos_cliente = LeadsController.get_instance().get_eventos_lead(self.lead["Email"])
         self.__load_date_events()
         
-    def __load_date_events(self): # Ponemos None para cuando no le pasemos funcione y
+    def __load_date_events(self,*args): # Ponemos None para cuando no le pasemos funcione y
         # cuando se lo pasmos también
         ''' La función carga los even1tos de la fecha que hemos
         seleccionado'''
@@ -106,7 +105,6 @@ class VentanaEventos(tk.Toplevel):
         # self.frame_botones.destroy()
         # self.frame_eventos.update_content(self.generar_contenido_eventos())
         self.frame_eventos.destroy()
-        self.date = self.cl_evento.get_date()
         contenido = self.generar_contenido_eventos()
         self.frame_eventos = TablaEventos(self, content=contenido)
         self.frame_eventos.pack(anchor = tk.W, fill=tk.X, padx=conf.PADX + 30, pady=conf.PADY)
@@ -117,6 +115,7 @@ class VentanaEventos(tk.Toplevel):
          y en lugar de un str con Tipo, Hora, Estado, Lugar utilizamos una
          lista para rellenar el LabelGrid con imágenes'''
 
+        self.eventos_cliente = LeadsController.get_instance().get_eventos_lead(self.lead["Email"])
         date_selected = self.cl_evento.get_date()
         self.eventos_dia = self.eventos_cliente.loc[self.eventos_cliente["Fecha"].dt.date == date_selected]
         self.eventos_dia = self.eventos_dia.sort_values(by=["Fecha"])
@@ -145,19 +144,16 @@ class VentanaEventos(tk.Toplevel):
     		print(event)
 
     def cm_nuevo_evento(self):
-        self.nuevo_evento = VentanaDatosEvento(self.leadsapp,self,self.lead,fecha=self.cl_evento.get_date())
+        self.nuevo_evento = VentanaDatosEvento(self.master,self,self.lead,fecha=self.cl_evento.get_date())
 
     def cm_editar_evento(self, indice):
         evento = self.eventos_dia.iloc[indice].to_dict()
         evento["index"] = self.eventos_dia.index[indice]
-        VentanaDatosEvento(self.leadsapp, self, self.lead, evento = evento, fecha = self.cl_evento.get_date())
+        VentanaDatosEvento(self.master, self, self.lead, evento = evento, fecha = self.cl_evento.get_date())
 
     def cm_enviar_email(self, indice_tabla_eventos):
-        lead_df = pd.DataFrame(self.lead , index = [0])# Conversion de Series a Dataframe
-        # lead_df= self.lead.to_frame() # Series a Dataframe que no ha funcionado
-        # print(lead_df)
         indice_df = self.eventos_dia.index[indice_tabla_eventos]
-        VentanaLoginEmail(self.leadsapp, lead_df, indice = indice_df)
+        VentanaLoginEmail(self.master, [self.lead["Email"]], indice = indice_df)
 
     def cm_realizar_evento(self, indice_tabla_eventos):
         indice_df = self.eventos_dia.index[indice_tabla_eventos]
@@ -166,6 +162,9 @@ class VentanaEventos(tk.Toplevel):
     def cm_borrar_evento(self, indice_tabla_eventos):
         indice_df = self.eventos_dia.index[indice_tabla_eventos]
         LeadsController.get_instance().borrarEvento(indice_df)
+
+
+
 
 
 

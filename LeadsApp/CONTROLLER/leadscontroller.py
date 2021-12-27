@@ -2,6 +2,8 @@ import pandas as pd
 import os
 from LeadsApp.CONTROLLER.Email import EmailReader
 from LeadsApp.MODEL.GestorEventos import EventoEstado
+from datetime import datetime
+
 
 
 class _LeadsController:#Clase privada no puede ser utilizada desde fuera
@@ -101,6 +103,9 @@ class _LeadsController:#Clase privada no puede ser utilizada desde fuera
     def get_leads(self):
         return self.df_leads
 
+    def get_leads_columns(self):
+        return self.df_leads.columns.values
+
     def get_mensajes(self):
         return self.df_mensajes
 
@@ -112,6 +117,15 @@ class _LeadsController:#Clase privada no puede ser utilizada desde fuera
 
     def get_eventos_lead(self,email):
         return self.df_eventos.loc[self.df_eventos["Email"] == email]
+
+    def get_eventos_dia(self,dia):
+
+        dia_inicio = datetime.fromordinal(dia.toordinal())
+        dia_inicio = dia_inicio.replace(hour=0,minute=0)
+        dia_fin = datetime.fromordinal(dia.toordinal())
+        dia_fin = dia_fin.replace(hour=23,minute=59)
+
+        return self.df_eventos.loc[(self.df_eventos["Fecha"] >= dia_inicio) & (self.df_eventos["Fecha"] <= dia_fin)]
 
     def añadir_lead(self,lead):
         self.df_leads = self.df_leads.append(lead, ignore_index=True)
@@ -163,7 +177,7 @@ class _LeadsController:#Clase privada no puede ser utilizada desde fuera
             self.realizarEvento(indice_evento)
 
     def get_lead_by_email(self,email):
-        return self.df_leads.loc[self.df_leads["Email"]==email]
+        return self.df_leads.loc[self.df_leads["Email"]==email].iloc[0].to_dict()
 
 class LeadsController:
     _instance = None
