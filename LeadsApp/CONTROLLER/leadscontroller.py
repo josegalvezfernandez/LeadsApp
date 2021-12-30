@@ -60,13 +60,19 @@ class _LeadsController:#Clase privada no puede ser utilizada desde fuera
         self.df_leads = abrir_tabla(_LeadsController.RUTA_LEADS, _LeadsController.COLUMNAS_LEADS)
         self.df_leads["Fecha captación"] = pd.to_datetime(self.df_leads["Fecha captación"])
         self.df_leads['Fecha captación'] = [time.date() for time in self.df_leads['Fecha captación']]
-        # self.df['Teléfono']= self.df['Teléfono'].map(str)
+        self.df_leads["Teléfono"] = self.df_leads["Teléfono"].fillna(0)
+        self.df_leads['Teléfono'] = self.df_leads["Teléfono"].astype(int).astype(str)
+        self.df_leads['Teléfono'] = self.df_leads['Teléfono'].replace("0","")
         self.df_leads = self.df_leads.fillna("")
 
         self.df_mensajes = abrir_tabla(_LeadsController.RUTA_MENSAJES, _LeadsController.COLUMNAS_MENSAJES)
         self.df_mensajes["Fecha"] = pd.to_datetime(self.df_mensajes["Fecha"])
+        self.df_mensajes = self.df_mensajes.fillna("")
+
         self.df_eventos = abrir_tabla(_LeadsController.RUTA_EVENTOS, _LeadsController.COLUMNAS_EVENTOS)
         self.df_eventos["Fecha"] = pd.to_datetime(self.df_eventos["Fecha"])
+        self.df_eventos = self.df_eventos.fillna("")
+
         if _LeadsController.ACTUALIZAR_DESDE_EMAIL:# TODO(developer) ahora mismo esta en False porque no conectamos con email
             self.actualizarLeadsDesdeEmail()  # ARREGLAR DESCARGAS CON CARLOS
 

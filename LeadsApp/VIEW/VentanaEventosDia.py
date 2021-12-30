@@ -50,14 +50,11 @@ class VentanaEventosDia(tk.Toplevel):
             # si ponemos el shape[0] es ver si es una lista sin eventos
             contenido = [["Sin Eventos"]]
         else:
-            contenido = [["  Nombre  ","  Tipo  ", "  Hora  ", "  Estado  ", "  Lugar  "]]
+            contenido = [["  Nombre  ","  Teléfono  ","  Tipo  ", "  Hora  ", "  Estado  ", "  Lugar  "]]
             for index, evento in self.eventos_dia.iterrows():  # iterrows es para recorrer un dataframe
                 str_hora = str(evento["Fecha"])[-8:-3]
-                nombre = LeadsController.get_instance().get_lead_by_email(evento["Email"])["Nombre"]
-                fila = [nombre,(get_photo_image_evento(evento["Tipo"]), evento["Tipo"]), str_hora, evento["Estado"]]
-                if isinstance(evento["Lugar"], float) and math.isnan(evento["Lugar"]):
-                    evento["Lugar"] = ""  # Como no existe lo ponemos a vacío
-                fila.append(evento["Lugar"])
+                lead = LeadsController.get_instance().get_lead_by_email(evento["Email"])
+                fila = [lead["Nombre"],lead["Teléfono"],(get_photo_image_evento(evento["Tipo"]), evento["Tipo"]), str_hora, evento["Estado"], evento["Lugar"]]
                 contenido.append(fila)
 
         return contenido
